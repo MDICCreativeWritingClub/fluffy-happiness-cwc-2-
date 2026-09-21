@@ -3,6 +3,7 @@
 import { colors } from "@/lib/theme";
 import { renderFormattedText } from "@/lib/richText";
 import { AuthorLink } from "@/components/AuthorLink";
+import { getAvatarColor, getInitials } from "@/lib/avatar";
 import { CommentSection } from "@/components/CommentSection";
 import { VoteButton } from "@/components/VoteButton";
 
@@ -115,9 +116,9 @@ export function ArticlePage({ id }: { id: string }) {
         <div className="flex items-center gap-4 flex-1 min-w-0">
           <div
             className="w-11 h-11 rounded-full flex items-center justify-center text-white shrink-0"
-            style={{ backgroundColor: colors.green900, fontFamily: "var(--font-display)", fontWeight: 600 }}
+            style={{ backgroundColor: getAvatarColor(article.author), fontFamily: "var(--font-display)", fontWeight: 600 }}
           >
-            {article.author[0]}
+            {getInitials(article.author)}
           </div>
           <div className="flex-1 min-w-0">
             <div style={{ color: colors.gray900, fontWeight: 500, fontSize: "0.9rem" }}>

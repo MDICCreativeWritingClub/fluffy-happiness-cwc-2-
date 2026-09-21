@@ -4,6 +4,7 @@ import { colors } from "@/lib/theme";
 
 import Link from "next/link";
 import { AuthorLink } from "@/components/AuthorLink";
+import { AuthorByline } from "@/components/AuthorByline";
 import { useRouter } from "next/navigation";
 import { Trophy, ThumbsUp, ArrowRight, BookOpen, Archive, Star } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -383,7 +384,7 @@ function EditorChoiceCard({ piece, isLast }: { piece: (typeof articles)[0]; isLa
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <div style={{ color: colors.heading, fontWeight: 500, fontSize: "0.875rem" }}>
-            <AuthorLink name={piece.author} studentCode={piece.studentCode} />
+            <AuthorByline name={piece.author} studentCode={piece.studentCode} size={20} textStyle={{ fontSize: "0.875rem" }} />
           </div>
           <div style={{ color: colors.gray400, fontSize: "0.75rem" }}>{piece.grade}</div>
         </div>
@@ -537,7 +538,7 @@ function RecentCard({ article }: { article: (typeof articles)[0] }) {
       <div className="flex items-center justify-between">
         <div>
           <div style={{ color: colors.gray700, fontSize: "0.8rem", fontWeight: 500 }}>
-            <AuthorLink name={article.author} studentCode={article.studentCode} />
+            <AuthorByline name={article.author} studentCode={article.studentCode} size={18} textStyle={{ fontSize: "0.8rem" }} />
           </div>
           <div style={{ color: colors.gray400, fontSize: "0.7rem" }}>
             {article.date

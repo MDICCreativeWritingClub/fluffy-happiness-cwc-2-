@@ -4,7 +4,7 @@ import { colors } from "@/lib/theme";
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { AuthorLink } from "@/components/AuthorLink";
+import { AuthorByline } from "@/components/AuthorByline";
 import { ThumbsUp, BookOpen, Search, User, Type } from "lucide-react";
 import { categories, type Category, type Article } from "@/data/articles";
 import { useVotes } from "@/context/VoteContext";
@@ -52,7 +52,7 @@ function ArticleCard({ article }: { article: Article }) {
       >
         <div>
           <div style={{ color: colors.gray700, fontSize: "0.8rem", fontWeight: 500 }}>
-            <AuthorLink name={article.author} studentCode={article.studentCode} />
+            <AuthorByline name={article.author} studentCode={article.studentCode} size={20} textStyle={{ fontSize: "0.8rem" }} />
           </div>
           <div style={{ color: colors.gray400, fontSize: "0.7rem" }}>
             {article.grade.split("—")[0].trim()}

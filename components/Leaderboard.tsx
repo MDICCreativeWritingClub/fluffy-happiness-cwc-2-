@@ -4,7 +4,7 @@ import { colors } from "@/lib/theme";
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { AuthorLink } from "@/components/AuthorLink";
+import { AuthorByline } from "@/components/AuthorByline";
 import { Trophy, ThumbsUp, ChevronDown, BookOpen, Calendar, Crown } from "lucide-react";
 import { articles } from "@/data/articles";
 import { useVotes } from "@/context/VoteContext";
@@ -155,7 +155,7 @@ export function Leaderboard() {
                   >
                     <RankBadge rank={i} />
                     <div className="flex-1 min-w-0">
-                      <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate"><AuthorLink name={writer.name} studentCode={writer.articles[0]?.studentCode} /></p>
+                      <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate"><AuthorByline name={writer.name} studentCode={writer.articles[0]?.studentCode} size={18} textStyle={{ fontSize: "0.85rem" }} /></p>
                       <p style={{ color: colors.gray400, fontSize: "0.7rem" }}>{writer.grade} · {writer.articles.length} writings</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -203,7 +203,7 @@ export function Leaderboard() {
                   >
                     <RankBadge rank={i} />
                     <div className="flex-1 min-w-0">
-                      <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate"><AuthorLink name={writer.name} studentCode={writer.articles[0]?.studentCode} /></p>
+                      <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate"><AuthorByline name={writer.name} studentCode={writer.articles[0]?.studentCode} size={18} textStyle={{ fontSize: "0.85rem" }} /></p>
                       <p style={{ color: colors.gray400, fontSize: "0.7rem" }}>{writer.grade} · {writer.articles.length} writings this month</p>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
@@ -253,8 +253,8 @@ export function Leaderboard() {
                   <RankBadge rank={i} />
                   <div className="flex-1 min-w-0">
                     <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate">{writing.title}</p>
-                    <p style={{ color: colors.gray400, fontSize: "0.7rem" }}>
-                      <AuthorLink name={writing.author} studentCode={writing.studentCode} /> · {writing.category}
+                    <p style={{ color: colors.gray400, fontSize: "0.7rem" }} className="flex items-center gap-1.5">
+                      <AuthorByline name={writing.author} studentCode={writing.studentCode} size={16} textStyle={{ fontSize: "0.7rem" }} /> · {writing.category}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">

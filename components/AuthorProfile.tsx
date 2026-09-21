@@ -6,6 +6,7 @@ import { ArrowLeft, ThumbsUp, Trophy, Star, BookOpen } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { supabase } from "@/lib/supabase";
 import { renderFormattedText } from "@/lib/richText";
+import { getAvatarColor, getInitials } from "@/lib/avatar";
 
 interface Piece {
   id: string;
@@ -120,7 +121,14 @@ export function AuthorProfile({ studentCode }: { studentCode: string }) {
         <ArrowLeft size={16} /> Back to search
       </Link>
 
-      <div className="mb-8">
+      <div className="mb-8 flex items-start gap-4">
+        <div
+          className="w-16 h-16 rounded-full flex items-center justify-center text-white shrink-0"
+          style={{ backgroundColor: getAvatarColor(data.name), fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.5rem" }}
+        >
+          {getInitials(data.name)}
+        </div>
+        <div>
         <h1 style={{ fontFamily: "var(--font-display)", color: colors.heading, fontWeight: 700, fontSize: "2rem" }}>
           {data.name}
         </h1>
@@ -161,6 +169,7 @@ export function AuthorProfile({ studentCode }: { studentCode: string }) {
             ) : null}
           </div>
         )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
