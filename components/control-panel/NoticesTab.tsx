@@ -5,7 +5,7 @@ import { Megaphone, Plus, Trash2, Pencil, X, GripVertical, ExternalLink, Clock, 
 import { colors } from "@/lib/theme";
 import { inputStyle, labelStyle } from "./shared";
 import type { SiteConfig, Notice, NoticeButton } from "@/context/SiteConfigContext";
-import { emptyNotice, newButtonId, isNoticeActive } from "@/lib/notices";
+import { emptyNotice, newButtonId, isNoticeActive, isNewNotice } from "@/lib/notices";
 import { uploadNoticeImage } from "@/lib/imageUpload";
 
 interface NoticesTabProps {
@@ -217,15 +217,28 @@ function NoticeForm({
               offLabel="Temporary"
             />
             {!form.isPermanent && (
-              <div className="flex items-center gap-2">
-                <Clock size={14} style={{ color: colors.gray400 }} />
-                <input
-                  type="date"
-                  value={form.expiryDate}
-                  onChange={(e) => setForm((f) => ({ ...f, expiryDate: e.target.value }))}
-                  style={{ ...inputStyle, width: "auto" }}
-                />
-              </div>
+              <>
+                <div className="flex items-center gap-2">
+                  <Clock size={14} style={{ color: colors.gray400 }} />
+                  <span style={{ color: colors.gray400, fontSize: "0.75rem" }}>From</span>
+                  <input
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
+                    style={{ ...inputStyle, width: "auto" }}
+                    placeholder="Immediately"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span style={{ color: colors.gray400, fontSize: "0.75rem" }}>Until</span>
+                  <input
+                    type="date"
+                    value={form.expiryDate}
+                    onChange={(e) => setForm((f) => ({ ...f, expiryDate: e.target.value }))}
+                    style={{ ...inputStyle, width: "auto" }}
+                  />
+                </div>
+              </>
             )}
             {form.isPermanent && (
               <span className="flex items-center gap-1.5" style={{ color: colors.gray400, fontSize: "0.78rem" }}>
@@ -233,6 +246,11 @@ function NoticeForm({
               </span>
             )}
           </div>
+          {!form.isPermanent && (
+            <p style={{ color: colors.gray400, fontSize: "0.72rem", marginTop: "0.4rem" }}>
+              Leave &quot;From&quot; blank to go live immediately. Leave &quot;Until&quot; blank to stay up indefinitely once started.
+            </p>
+          )}
         </div>
 
         {/* Buttons */}
@@ -403,6 +421,15 @@ export function NoticesTab({ config, updateConfig, setSaved }: NoticesTabProps) 
         <div className="flex flex-col gap-3">
           {notices.map((notice) => {
             const active = isNoticeActive(notice);
+            const isScheduled = !active && !notice.isPermanent && notice.startDate && new Date(notice.startDate + "T00:00:00").getTime() > Date.now();
+            const isNew = isNewNotice(notice);
+            const statusLabel = isScheduled
+              ? "Scheduled"
+              : active
+              ? notice.isPermanent
+                ? "Permanent"
+                : "Active"
+              : "Expired";
             return (
               <div
                 key={notice.id}
@@ -420,14 +447,22 @@ export function NoticesTab({ config, updateConfig, setSaved }: NoticesTabProps) 
                     <p style={{ color: colors.heading, fontWeight: 600, fontSize: "0.92rem" }} className="truncate">
                       {notice.heading || "Untitled notice"}
                     </p>
+                    {isNew && (
+                      <span
+                        className="px-2 py-0.5 rounded-full text-xs shrink-0 font-medium"
+                        style={{ backgroundColor: colors.yellow400, color: colors.green900 }}
+                      >
+                        New
+                      </span>
+                    )}
                     <span
                       className="px-2 py-0.5 rounded-full text-xs shrink-0"
                       style={{
-                        backgroundColor: active ? colors.badgeBgStrong : colors.gray100,
-                        color: active ? colors.badgeText : colors.gray500,
+                        backgroundColor: isScheduled ? colors.yellow100 : active ? colors.badgeBgStrong : colors.gray100,
+                        color: isScheduled ? colors.amber700 : active ? colors.badgeText : colors.gray500,
                       }}
                     >
-                      {active ? (notice.isPermanent ? "Permanent" : "Active") : "Expired"}
+                      {statusLabel}
                     </span>
                     {notice.openDetailPage && (
                       <span className="flex items-center gap-1 text-xs" style={{ color: colors.gray400 }}>
@@ -440,9 +475,11 @@ export function NoticesTab({ config, updateConfig, setSaved }: NoticesTabProps) 
                       {notice.body}
                     </p>
                   )}
-                  {!notice.isPermanent && notice.expiryDate && (
+                  {!notice.isPermanent && (notice.startDate || notice.expiryDate) && (
                     <p style={{ color: colors.gray400, fontSize: "0.72rem", marginTop: "0.25rem" }}>
-                      Expires {new Date(notice.expiryDate + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      {notice.startDate && `Starts ${new Date(notice.startDate + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
+                      {notice.startDate && notice.expiryDate && " · "}
+                      {notice.expiryDate && `Expires ${new Date(notice.expiryDate + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
                     </p>
                   )}
                 </div>
