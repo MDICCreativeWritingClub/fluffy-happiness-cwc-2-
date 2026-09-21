@@ -12,6 +12,34 @@ import { usePublishedArticles } from "@/hooks/usePublishedArticles";
 
 type LeaderboardTab = "alltime" | "writers-month" | "writings-month";
 
+const MEDALS = ["🥇", "🥈", "🥉"];
+const TOP3_GLOW = ["rgba(250,204,21,0.35)", "rgba(148,163,184,0.3)", "rgba(251,146,60,0.3)"];
+
+/** Subtle border/shadow highlight applied to the whole row for ranks 1-3. */
+function topRowStyle(rank: number): React.CSSProperties {
+  if (rank >= 3) return { border: `1px solid ${colors.gray200}` };
+  return {
+    border: `1px solid ${TOP3_GLOW[rank]}`,
+    boxShadow: `0 0 0 1px ${TOP3_GLOW[rank]}, 0 2px 10px -4px ${TOP3_GLOW[rank]}`,
+  };
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  const isTop3 = rank < 3;
+  return (
+    <div
+      className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+      style={{
+        backgroundColor: rank === 0 ? colors.yellow100 : rank === 1 ? colors.gray100 : rank === 2 ? colors.red50 : colors.gray50,
+        color: rank === 0 ? colors.amber600 : rank === 1 ? colors.gray500 : rank === 2 ? colors.red600 : colors.gray400,
+        boxShadow: isTop3 ? `0 0 0 3px ${rank === 0 ? "rgba(250,204,21,0.25)" : rank === 1 ? "rgba(148,163,184,0.2)" : "rgba(251,146,60,0.2)"}` : undefined,
+      }}
+    >
+      {isTop3 ? <span style={{ fontSize: "0.85rem" }}>{MEDALS[rank]}</span> : rank + 1}
+    </div>
+  );
+}
+
 export function Leaderboard() {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>("alltime");
   const [expandedWriter, setExpandedWriter] = useState<string | null>(null);
@@ -120,20 +148,12 @@ export function Leaderboard() {
               <p style={{ color: colors.gray400, fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>No writers yet</p>
             ) : (
               allTimeWriters.slice(0, 10).map((writer, i) => (
-                <div key={writer.name} className="rounded-lg overflow-hidden transition-all hover:shadow-sm" style={{ border: `1px solid ${colors.gray200}` }}>
+                <div key={writer.name} className="rounded-lg overflow-hidden transition-all hover:shadow-sm" style={topRowStyle(i)}>
                   <div
                     className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-[var(--token-gray100)] transition-all hover:pl-4"
                     onClick={() => setExpandedWriter(expandedWriter === writer.name ? null : writer.name)}
                   >
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                      style={{
-                        backgroundColor: i === 0 ? colors.yellow100 : i === 1 ? colors.gray100 : i === 2 ? colors.red50 : colors.gray50,
-                        color: i === 0 ? colors.amber600 : i === 1 ? colors.gray500 : i === 2 ? colors.red600 : colors.gray400,
-                      }}
-                    >
-                      {i + 1}
-                    </div>
+                    <RankBadge rank={i} />
                     <div className="flex-1 min-w-0">
                       <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate"><AuthorLink name={writer.name} studentCode={writer.articles[0]?.studentCode} /></p>
                       <p style={{ color: colors.gray400, fontSize: "0.7rem" }}>{writer.grade} · {writer.articles.length} writings</p>
@@ -176,20 +196,12 @@ export function Leaderboard() {
               <p style={{ color: colors.gray400, fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>No writers this month yet</p>
             ) : (
               monthlyWriters.slice(0, 10).map((writer, i) => (
-                <div key={writer.name} className="rounded-lg overflow-hidden transition-all hover:shadow-sm" style={{ border: `1px solid ${colors.gray200}` }}>
+                <div key={writer.name} className="rounded-lg overflow-hidden transition-all hover:shadow-sm" style={topRowStyle(i)}>
                   <div
                     className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-[var(--token-gray100)] transition-all hover:pl-4"
                     onClick={() => setExpandedWriter(expandedWriter === `month-${writer.name}` ? null : `month-${writer.name}`)}
                   >
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                      style={{
-                        backgroundColor: i === 0 ? colors.yellow100 : i === 1 ? colors.gray100 : i === 2 ? colors.red50 : colors.gray50,
-                        color: i === 0 ? colors.amber600 : i === 1 ? colors.gray500 : i === 2 ? colors.red600 : colors.gray400,
-                      }}
-                    >
-                      {i + 1}
-                    </div>
+                    <RankBadge rank={i} />
                     <div className="flex-1 min-w-0">
                       <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate"><AuthorLink name={writer.name} studentCode={writer.articles[0]?.studentCode} /></p>
                       <p style={{ color: colors.gray400, fontSize: "0.7rem" }}>{writer.grade} · {writer.articles.length} writings this month</p>
@@ -236,17 +248,9 @@ export function Leaderboard() {
                   key={writing.id}
                   href={`/article/${writing.id}`}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[var(--token-gray100)] transition-all hover:-translate-y-0.5 hover:shadow-sm"
-                  style={{ border: `1px solid ${colors.gray200}` }}
+                  style={topRowStyle(i)}
                 >
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
-                    style={{
-                      backgroundColor: i === 0 ? colors.yellow100 : i === 1 ? colors.gray100 : i === 2 ? colors.red50 : colors.gray50,
-                      color: i === 0 ? colors.amber600 : i === 1 ? colors.gray500 : i === 2 ? colors.red600 : colors.gray400,
-                    }}
-                  >
-                    {i + 1}
-                  </div>
+                  <RankBadge rank={i} />
                   <div className="flex-1 min-w-0">
                     <p style={{ color: colors.heading, fontWeight: 500, fontSize: "0.85rem" }} className="truncate">{writing.title}</p>
                     <p style={{ color: colors.gray400, fontSize: "0.7rem" }}>
