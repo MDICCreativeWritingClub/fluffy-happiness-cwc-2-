@@ -5,8 +5,10 @@ import { colors } from "@/lib/theme";
 import { GraduationCap, Users, UserSquare2, Palette } from "lucide-react";
 import type { StaffMember } from "@/data/articles";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
+import { getInitials, getAvatarColor } from "@/lib/avatar";
 
 function StaffCard({ member, accent }: { member: StaffMember; accent: string }) {
+  const avatarColor = getAvatarColor(member.name);
   return (
     <div
       className="flex items-start gap-4 p-4 rounded-xl border transition-all hover:-translate-y-0.5 hover:shadow-sm"
@@ -17,10 +19,10 @@ function StaffCard({ member, accent }: { member: StaffMember; accent: string }) 
       }}
     >
       <div
-        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white"
-        style={{ backgroundColor: member.isTeacher ? colors.green900 : colors.gray500 }}
+        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-semibold"
+        style={{ backgroundColor: avatarColor }}
       >
-        {member.isTeacher ? <GraduationCap size={18} /> : member.name[0]}
+        {member.isTeacher ? <GraduationCap size={18} /> : getInitials(member.name)}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
