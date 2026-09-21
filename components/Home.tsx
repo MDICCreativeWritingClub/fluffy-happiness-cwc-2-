@@ -12,7 +12,7 @@ import { useVotes } from "@/context/VoteContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
 import { usePublishedArticles } from "@/hooks/usePublishedArticles";
 
-import { getActiveNotices, headingSizeStyles } from "@/lib/notices";
+import { getActiveNotices, headingSizeStyles, isNewNotice } from "@/lib/notices";
 import type { Notice } from "@/context/SiteConfigContext";
 import { VoteButton } from "@/components/VoteButton";
 
@@ -156,12 +156,22 @@ function Hero() {
       <div className="relative min-h-[460px] sm:h-full flex flex-col justify-end px-5 sm:px-12 py-8 sm:pb-14 sm:py-0">
         {currentNotice ? (
           <div key={currentNotice.id} className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <span
-              className="inline-block px-2.5 py-0.5 rounded-full mb-3"
-              style={{ backgroundColor: "rgba(255,255,255,0.12)", color: colors.green200, fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.1em", border: "1px solid rgba(255,255,255,0.25)" }}
-            >
-              NOTICE {currentNotice.isPermanent ? "" : `· UNTIL ${new Date(currentNotice.expiryDate + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
-            </span>
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
+              <span
+                className="inline-block px-2.5 py-0.5 rounded-full"
+                style={{ backgroundColor: "rgba(255,255,255,0.12)", color: colors.green200, fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.1em", border: "1px solid rgba(255,255,255,0.25)" }}
+              >
+                NOTICE {currentNotice.isPermanent ? "" : `· UNTIL ${new Date(currentNotice.expiryDate + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}`}
+              </span>
+              {isNewNotice(currentNotice) && (
+                <span
+                  className="inline-block px-2.5 py-0.5 rounded-full"
+                  style={{ backgroundColor: colors.yellow400, color: colors.green900, fontSize: "0.68rem", fontWeight: 700, letterSpacing: "0.05em" }}
+                >
+                  NEW
+                </span>
+              )}
+            </div>
             <h1
               style={{
                 fontFamily: "var(--font-display)",
