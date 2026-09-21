@@ -4,6 +4,7 @@ import { colors } from "@/lib/theme";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, CornerDownRight, Send, CheckCircle2 } from "lucide-react";
 import { useComments, type Comment } from "@/context/CommentsContext";
+import { getInitials, getAvatarColor } from "@/lib/avatar";
 
 const REACTION_EMOJIS = ["❤️", "😂", "👏", "😮", "😢"];
 
@@ -127,9 +128,9 @@ function Avatar({ name }: { name: string }) {
   return (
     <div
       className="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 text-sm"
-      style={{ backgroundColor: colors.green900, fontFamily: "var(--font-display)", fontWeight: 600 }}
+      style={{ backgroundColor: getAvatarColor(name), fontFamily: "var(--font-display)", fontWeight: 600 }}
     >
-      {name.trim()[0]?.toUpperCase() ?? "?"}
+      {getInitials(name)}
     </div>
   );
 }
