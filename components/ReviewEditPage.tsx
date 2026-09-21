@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useSubmissions, type Submission } from "@/context/SubmissionsContext";
 import { getReviewerSession } from "@/lib/reviewerAuth";
-import { FormattingToolbar } from "@/components/FormattingToolbar";
+import { RichTextEditor } from "@/components/RichTextEditor";
 
 interface Draft {
   title: string;
@@ -72,7 +72,6 @@ export function ReviewEditPage({ id }: { id: string }) {
   const [saving, setSaving] = useState<Submission["status"] | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const commitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   const submission = submissions.find((s) => s.id === id);
 
@@ -355,25 +354,11 @@ export function ReviewEditPage({ id }: { id: string }) {
           <label style={{ color: colors.gray500, fontSize: "0.75rem", display: "block", marginBottom: "0.35rem" }}>
             Content
           </label>
-          <FormattingToolbar textareaRef={contentRef} onChange={(value) => handleChange("content", value)} />
-          <textarea
-            ref={contentRef}
+          <RichTextEditor
             value={liveDraft.content}
-            onChange={(e) => handleChange("content", e.target.value)}
+            onChange={(value) => handleChange("content", value)}
             onBlur={flushPendingCommit}
-            rows={16}
-            style={{
-              width: "100%",
-              padding: "1rem",
-              borderRadius: "0.75rem",
-              border: `1px solid ${colors.gray200}`,
-              fontSize: "0.9rem",
-              lineHeight: "1.7",
-              color: colors.gray700,
-              outline: "none",
-              resize: "vertical",
-              whiteSpace: "pre-wrap",
-            }}
+            minHeight="360px"
           />
         </div>
       </div>

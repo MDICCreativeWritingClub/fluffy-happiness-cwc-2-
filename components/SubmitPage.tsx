@@ -2,12 +2,13 @@
 
 import { colors } from "@/lib/theme";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { CheckCircle, AlertCircle, HelpCircle } from "lucide-react";
 import { useSubmissions } from "@/context/SubmissionsContext";
 import { useSiteConfig } from "@/context/SiteConfigContext";
-import { FormattingToolbar } from "@/components/FormattingToolbar";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { stripFormatMarks } from "@/lib/richText";
 
 const DAILY_SUBMISSION_LIMIT = 2;
 
@@ -101,50 +102,14 @@ function useFieldFocus() {
   };
 }
 
-function PillPicker({
-  options,
-  value,
-  onChange,
-  placeholder,
-}: {
-  options: string[];
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-}) {
-  if (options.length === 0) {
-    return <p style={{ color: colors.gray400, fontSize: "0.8rem" }}>{placeholder}</p>;
-  }
-  return (
-    <div className="flex flex-wrap gap-2">
-      {options.map((opt) => {
-        const selected = value === opt;
-        return (
-          <button
-            key={opt}
-            type="button"
-            onClick={() => onChange(opt)}
-            className="px-3.5 py-1.5 rounded-full text-sm transition-all active:scale-95"
-            style={{
-              backgroundColor: selected ? colors.green900 : colors.surface,
-              color: selected ? colors.white : colors.gray700,
-              border: `1px solid ${selected ? colors.green900 : colors.green200}`,
-              fontWeight: selected ? 600 : 400,
-            }}
-          >
-            {opt}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 export function SubmitPage() {
   const { submissions, addSubmission } = useSubmissions();
   const { config } = useSiteConfig();
   const [form, setForm] = useState<FormState>(empty);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  const plainContent = stripFormatMarks(form.content);
+  const wordCount = plainContent.trim() ? plainContent.trim().split(/\s+/).length : 0;
+  const charCount = plainContent.length;
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -194,6 +159,11 @@ export function SubmitPage() {
 
     if (!form.theme) {
       setSubmitError("Please select a theme.");
+      return;
+    }
+
+    if (!plainContent.trim()) {
+      setSubmitError("Please write or paste your piece before submitting.");
       return;
     }
 
@@ -360,23 +330,28 @@ export function SubmitPage() {
           </Field>
         </div>
 
-        <Field label="Category" required>
-          <PillPicker
-            options={categoryOptions}
-            value={form.category}
-            onChange={(v) => setForm((f) => ({ ...f, category: v }))}
-            placeholder="No categories available"
-          />
-        </Field>
-
-        <Field label="Monthly Theme" required>
-          <PillPicker
-            options={config.themeOptions ?? []}
-            value={form.theme}
-            onChange={(v) => setForm((f) => ({ ...f, theme: v }))}
-            placeholder="No themes available"
-          />
-        </Field>
+        <div className="grid sm:grid-cols-2 gap-5">
+          <Field label="Category" required>
+            <select
+              required name="category" value={form.category} onChange={handleChange}
+              style={{ ...inputStyle, color: form.category ? colors.gray900 : colors.gray400 }}
+              {...focus}
+            >
+              <option value="">Select a category</option>
+              {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </Field>
+          <Field label="Monthly Theme" required>
+            <select
+              required name="theme" value={form.theme} onChange={handleChange}
+              style={{ ...inputStyle, color: form.theme ? colors.gray900 : colors.gray400 }}
+              {...focus}
+            >
+              <option value="">Select a theme</option>
+              {(config.themeOptions ?? []).map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </Field>
+        </div>
 
         <Field label="Title of Your Work" required>
           <input
@@ -387,21 +362,20 @@ export function SubmitPage() {
         </Field>
 
         <Field label="Your Writing" required>
-          <FormattingToolbar
-            textareaRef={contentRef}
+          <RichTextEditor
+            value={form.content}
             onChange={(value) => setForm((f) => ({ ...f, content: value }))}
-          />
-          <textarea
-            ref={contentRef}
-            required name="content" value={form.content} onChange={handleChange}
-            rows={12}
             placeholder="Paste or write your piece here..."
-            style={{ ...inputStyle, resize: "vertical", lineHeight: "1.8" }}
-            {...focus}
+            minHeight="260px"
           />
-          <p style={{ color: colors.gray400, fontSize: "0.75rem", marginTop: "0.4rem" }}>
-            Select text and use the buttons above to format it — bold, italic, or underline.
-          </p>
+          <div className="flex items-center justify-between mt-1.5 flex-wrap gap-2">
+            <p style={{ color: colors.gray400, fontSize: "0.75rem" }}>
+              Select text and use the buttons above to format it — bold, italic, or underline. Pasting from Word, Google Docs, or a PDF keeps their bold/italic/underline formatting.
+            </p>
+            <p style={{ color: colors.gray400, fontSize: "0.75rem" }} className="shrink-0">
+              {wordCount} {wordCount === 1 ? "word" : "words"} · {charCount} {charCount === 1 ? "character" : "characters"}
+            </p>
+          </div>
         </Field>
 
         <label className="flex items-start gap-3 cursor-pointer">

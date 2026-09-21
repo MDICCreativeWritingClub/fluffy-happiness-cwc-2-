@@ -16,15 +16,7 @@ import { getActiveNotices, headingSizeStyles, isNewNotice } from "@/lib/notices"
 import type { Notice } from "@/context/SiteConfigContext";
 import { VoteButton } from "@/components/VoteButton";
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-}
+import { getInitials, getAvatarColor } from "@/lib/avatar";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -282,9 +274,16 @@ function WriterOfMonth() {
       <div className="flex items-start gap-4">
         <div
           className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
-          style={{ backgroundColor: colors.green400, color: colors.green900, fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "0.85rem" }}
+          style={{
+            backgroundColor: getAvatarColor(config.womName || "?"),
+            color: colors.white,
+            fontFamily: "var(--font-display)",
+            fontWeight: 700,
+            fontSize: "0.85rem",
+            border: "2px solid rgba(255,255,255,0.35)",
+          }}
         >
-          {initials(config.womName || "?")}
+          {getInitials(config.womName || "?")}
         </div>
         <div className="flex-1 min-w-0">
           <p style={{ color: colors.yellow400, fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.35rem" }}>
@@ -470,11 +469,12 @@ function SideLeaderboard() {
               <span
                 className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
                 style={{
-                  backgroundColor: i === 0 ? colors.yellow100 : colors.gray100,
-                  color: i === 0 ? colors.amber600 : colors.gray500,
+                  backgroundColor: i === 0 ? colors.yellow100 : i === 1 ? colors.gray100 : i === 2 ? colors.red50 : colors.gray50,
+                  color: i === 0 ? colors.amber600 : i === 1 ? colors.gray500 : i === 2 ? colors.red600 : colors.gray400,
+                  boxShadow: i < 3 ? `0 0 0 2px ${i === 0 ? "rgba(250,204,21,0.25)" : i === 1 ? "rgba(148,163,184,0.2)" : "rgba(251,146,60,0.2)"}` : undefined,
                 }}
               >
-                {i + 1}
+                {i < 3 ? <span style={{ fontSize: "0.72rem" }}>{["🥇", "🥈", "🥉"][i]}</span> : i + 1}
               </span>
               <div className="flex-1 min-w-0">
                 <div style={{ color: colors.heading, fontWeight: 500, fontSize: "0.82rem" }} className="truncate">
