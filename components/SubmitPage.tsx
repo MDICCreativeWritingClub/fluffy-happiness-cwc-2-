@@ -101,6 +101,45 @@ function useFieldFocus() {
   };
 }
 
+function PillPicker({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: {
+  options: string[];
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  if (options.length === 0) {
+    return <p style={{ color: colors.gray400, fontSize: "0.8rem" }}>{placeholder}</p>;
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => {
+        const selected = value === opt;
+        return (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => onChange(opt)}
+            className="px-3.5 py-1.5 rounded-full text-sm transition-all active:scale-95"
+            style={{
+              backgroundColor: selected ? colors.green900 : colors.surface,
+              color: selected ? colors.white : colors.gray700,
+              border: `1px solid ${selected ? colors.green900 : colors.green200}`,
+              fontWeight: selected ? 600 : 400,
+            }}
+          >
+            {opt}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function SubmitPage() {
   const { submissions, addSubmission } = useSubmissions();
   const { config } = useSiteConfig();
@@ -145,6 +184,16 @@ export function SubmitPage() {
 
     if (!/^\d{1,9}$/.test(form.studentCode)) {
       setSubmitError("Student code must contain only numbers (up to 9 digits).");
+      return;
+    }
+
+    if (!form.category) {
+      setSubmitError("Please select a category.");
+      return;
+    }
+
+    if (!form.theme) {
+      setSubmitError("Please select a theme.");
       return;
     }
 
@@ -311,28 +360,23 @@ export function SubmitPage() {
           </Field>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5">
-          <Field label="Category" required>
-            <select
-              required name="category" value={form.category} onChange={handleChange}
-              style={{ ...inputStyle, color: form.category ? colors.gray900 : colors.gray400 }}
-              {...focus}
-            >
-              <option value="">Select a category</option>
-              {categoryOptions.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </Field>
-          <Field label="Monthly Theme" required>
-            <select
-              required name="theme" value={form.theme} onChange={handleChange}
-              style={{ ...inputStyle, color: form.theme ? colors.gray900 : colors.gray400 }}
-              {...focus}
-            >
-              <option value="">Select a theme</option>
-              {(config.themeOptions ?? []).map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </Field>
-        </div>
+        <Field label="Category" required>
+          <PillPicker
+            options={categoryOptions}
+            value={form.category}
+            onChange={(v) => setForm((f) => ({ ...f, category: v }))}
+            placeholder="No categories available"
+          />
+        </Field>
+
+        <Field label="Monthly Theme" required>
+          <PillPicker
+            options={config.themeOptions ?? []}
+            value={form.theme}
+            onChange={(v) => setForm((f) => ({ ...f, theme: v }))}
+            placeholder="No themes available"
+          />
+        </Field>
 
         <Field label="Title of Your Work" required>
           <input
