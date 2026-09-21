@@ -40,6 +40,7 @@ export interface Notice {
   body: string;
   imageUrl: string; // optional background/banner image, recommended 1600x900 (16:9)
   isPermanent: boolean;
+  startDate: string; // ISO date (YYYY-MM-DD), optional — notice stays hidden until this date if set
   expiryDate: string; // ISO date (YYYY-MM-DD), ignored when isPermanent is true
   buttons: NoticeButton[];
   openDetailPage: boolean;
