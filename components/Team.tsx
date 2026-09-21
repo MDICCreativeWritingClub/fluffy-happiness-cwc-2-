@@ -6,13 +6,14 @@ import { GraduationCap, Users, UserSquare2, Palette } from "lucide-react";
 import type { StaffMember } from "@/data/articles";
 import { useTeamMembers } from "@/hooks/useTeamMembers";
 
-function StaffCard({ member }: { member: StaffMember }) {
+function StaffCard({ member, accent }: { member: StaffMember; accent: string }) {
   return (
     <div
       className="flex items-start gap-4 p-4 rounded-xl border transition-all hover:-translate-y-0.5 hover:shadow-sm"
       style={{
         backgroundColor: member.isTeacher ? colors.badgeBg : colors.surface,
         borderColor: member.isTeacher ? colors.badgeBorder : colors.gray200,
+        borderLeft: `3px solid ${accent}`,
       }}
     >
       <div
@@ -48,8 +49,19 @@ function StaffCard({ member }: { member: StaffMember }) {
   );
 }
 
+function SectionAccentBar({ color }: { color: string }) {
+  return <span className="inline-block w-1 h-4 rounded-full" style={{ backgroundColor: color }} />;
+}
+
 export function Team() {
   const { executives, editorialTeam, classReps, mediaTeam } = useTeamMembers();
+
+  const sections = [
+    { key: "executives", label: "Executives", icon: <GraduationCap size={16} style={{ color: colors.green900 }} />, accent: colors.green900, members: executives, cols: "flex flex-col gap-3" },
+    { key: "editorial", label: "Editorial Team", icon: <Users size={16} style={{ color: colors.green600 }} />, accent: colors.green600, members: editorialTeam, cols: "grid sm:grid-cols-2 gap-3" },
+    { key: "classreps", label: "Class Representatives", icon: <UserSquare2 size={16} style={{ color: colors.amber600 }} />, accent: colors.amber600, members: classReps, cols: "grid sm:grid-cols-2 gap-3" },
+    { key: "media", label: "Media Team", icon: <Palette size={16} style={{ color: colors.violet700 }} />, accent: colors.violet700, members: mediaTeam, cols: "grid sm:grid-cols-2 gap-3" },
+  ];
 
   return (
     <div className="max-w-5xl mx-auto px-5 pt-24 pb-16">
@@ -64,65 +76,23 @@ export function Team() {
       </div>
 
       <div className="flex flex-col gap-8">
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <GraduationCap size={16} style={{ color: colors.green600 }} />
-            <h2 style={{ color: colors.heading, fontWeight: 600, fontSize: "1rem" }}>
-              Executives
-            </h2>
-            <div className="flex-1 h-px" style={{ backgroundColor: colors.gray200 }} />
+        {sections.map((section) => (
+          <div key={section.key}>
+            <div className="flex items-center gap-3 mb-4">
+              <SectionAccentBar color={section.accent} />
+              {section.icon}
+              <h2 style={{ color: colors.heading, fontWeight: 600, fontSize: "1rem" }}>
+                {section.label}
+              </h2>
+              <div className="flex-1 h-px" style={{ backgroundColor: colors.gray200 }} />
+            </div>
+            <div className={section.cols}>
+              {section.members.map((m) => (
+                <StaffCard key={m.id ?? m.name + m.period} member={m} accent={section.accent} />
+              ))}
+            </div>
           </div>
-          <div className="flex flex-col gap-3">
-            {executives.map((m) => (
-              <StaffCard key={m.id ?? m.name + m.period} member={m} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <Users size={16} style={{ color: colors.green600 }} />
-            <h2 style={{ color: colors.heading, fontWeight: 600, fontSize: "1rem" }}>
-              Editorial Team
-            </h2>
-            <div className="flex-1 h-px" style={{ backgroundColor: colors.gray200 }} />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {editorialTeam.map((m) => (
-              <StaffCard key={m.id ?? m.name + m.period} member={m} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <UserSquare2 size={16} style={{ color: colors.green600 }} />
-            <h2 style={{ color: colors.heading, fontWeight: 600, fontSize: "1rem" }}>
-              Class Representatives
-            </h2>
-            <div className="flex-1 h-px" style={{ backgroundColor: colors.gray200 }} />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {classReps.map((m) => (
-              <StaffCard key={m.id ?? m.name + m.period} member={m} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-center gap-3 mb-4">
-            <Palette size={16} style={{ color: colors.green600 }} />
-            <h2 style={{ color: colors.heading, fontWeight: 600, fontSize: "1rem" }}>
-              Media Team
-            </h2>
-            <div className="flex-1 h-px" style={{ backgroundColor: colors.gray200 }} />
-          </div>
-          <div className="grid sm:grid-cols-2 gap-3">
-            {mediaTeam.map((m) => (
-              <StaffCard key={m.id ?? m.name + m.period} member={m} />
-            ))}
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
