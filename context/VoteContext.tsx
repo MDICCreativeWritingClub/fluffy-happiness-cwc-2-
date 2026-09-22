@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { useSupabaseRealtime } from "@/lib/useSupabaseRealtime";
 import { articles as initialArticles } from "@/data/articles";
 import { getDeviceFingerprint } from "@/lib/fingerprint";
+import { getHardwareSignature } from "@/lib/hardwareFingerprint";
 import { getSessionId } from "@/lib/session";
 
 interface VoteContextType {
@@ -15,10 +16,10 @@ interface VoteContextType {
 
 const VoteContext = createContext<VoteContextType | null>(null);
 
-
 export function VoteProvider({ children }: { children: ReactNode }) {
   const sessionId = useRef<string>("");
   const fingerprint = useRef<string>("");
+  const hardwareSignature = useRef<string>("");
 
   const [votes, setVotes] = useState<Record<string, number>>(() =>
     Object.fromEntries(initialArticles.map((a) => [a.id, a.votes ?? 0]))
@@ -31,7 +32,10 @@ export function VoteProvider({ children }: { children: ReactNode }) {
     sessionId.current = getSessionId();
 
     async function load() {
-      fingerprint.current = await getDeviceFingerprint();
+      [fingerprint.current, hardwareSignature.current] = await Promise.all([
+        getDeviceFingerprint(),
+        getHardwareSignature(),
+      ]);
 
       // All vote counts
       const { data: voteData } = await supabase.from("votes").select("article_id, count");
@@ -45,19 +49,27 @@ export function VoteProvider({ children }: { children: ReactNode }) {
         setVotes(map);
       }
 
-      // Which articles this session OR this device has already voted on.
-      // Checking fingerprint too catches "same device, cleared storage"
-      // repeat votes (e.g. incognito windows) that a session-only check
-      // would miss.
-      const { data: myVotes } = await supabase
-        .from("voter_log")
-        .select("article_id")
-        .or(`session_id.eq.${sessionId.current},fingerprint.eq.${fingerprint.current}`);
-
-      if (myVotes) {
-        const votedMap: Record<string, boolean> = {};
-        for (const row of myVotes) votedMap[row.article_id] = true;
-        setVoted(votedMap);
+      // Which articles this machine has already voted on. Goes through
+      // the API route (not a direct Supabase query) because the
+      // machine key depends on the real client IP, which is only known
+      // server-side.
+      try {
+        const params = new URLSearchParams({
+          hardwareSignature: hardwareSignature.current,
+          sessionId: sessionId.current,
+          fingerprint: fingerprint.current || "",
+        });
+        const res = await fetch(`/api/vote?${params.toString()}`);
+        if (res.ok) {
+          const { articleIds } = await res.json();
+          const votedMap: Record<string, boolean> = {};
+          for (const id of articleIds as string[]) votedMap[id] = true;
+          setVoted(votedMap);
+        }
+      } catch {
+        // Network hiccup — voted state just stays empty until next load;
+        // the server-side check on actual vote attempts still protects
+        // against duplicates either way.
       }
     }
 
@@ -76,42 +88,49 @@ export function VoteProvider({ children }: { children: ReactNode }) {
   const castVote = useCallback(async (id: string) => {
     if (voted[id]) return;
 
-    // Last-second safety check: catches the case where this device already
-    // voted (matching fingerprint) but the initial load() hadn't resolved
-    // yet when the button became clickable.
-    const { data: existing } = await supabase
-      .from("voter_log")
-      .select("article_id")
-      .eq("article_id", id)
-      .or(`session_id.eq.${sessionId.current},fingerprint.eq.${fingerprint.current}`)
-      .limit(1);
-
-    if (existing && existing.length > 0) {
-      setVoted((prev) => ({ ...prev, [id]: true }));
-      return;
-    }
-
-    // Optimistic update
+    // Optimistic update — reverted below if the server rejects the vote.
     setVotes((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
     setVoted((prev) => ({ ...prev, [id]: true }));
 
-    // Atomic increment — avoids the read-then-write race where two
-    // concurrent votes on the same article can silently overwrite
-    // each other and drop a vote.
-    const { data: newCount, error } = await supabase.rpc("increment_vote", {
-      p_article_id: id,
-    });
+    // Goes through the API route so the de-duplication key can include
+    // the real client IP (only available server-side) combined with the
+    // device's hardware signature — this is what makes switching
+    // browsers on the same device still count as one vote, not two.
+    try {
+      const res = await fetch("/api/vote", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: id,
+          hardwareSignature: hardwareSignature.current,
+          sessionId: sessionId.current,
+          fingerprint: fingerprint.current || null,
+        }),
+      });
 
-    if (!error && typeof newCount === "number") {
-      setVotes((prev) => ({ ...prev, [id]: newCount }));
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        if (body.error === "ALREADY_VOTED") {
+          // Keep it marked as voted, just undo the optimistic increment.
+          setVotes((prev) => ({ ...prev, [id]: Math.max((prev[id] ?? 1) - 1, 0) }));
+          return;
+        }
+        // Any other failure — fully revert.
+        setVotes((prev) => ({ ...prev, [id]: Math.max((prev[id] ?? 1) - 1, 0) }));
+        setVoted((prev) => ({ ...prev, [id]: false }));
+        return;
+      }
+
+      const { count } = await res.json();
+      if (typeof count === "number") {
+        setVotes((prev) => ({ ...prev, [id]: count }));
+      }
+    } catch {
+      // Network failure — revert the optimistic update rather than
+      // leave the UI claiming a vote that never reached the server.
+      setVotes((prev) => ({ ...prev, [id]: Math.max((prev[id] ?? 1) - 1, 0) }));
+      setVoted((prev) => ({ ...prev, [id]: false }));
     }
-
-    // Log this session + device voted
-    await supabase.from("voter_log").upsert({
-      session_id: sessionId.current,
-      fingerprint: fingerprint.current,
-      article_id: id,
-    });
   }, [voted]);
 
   return (
